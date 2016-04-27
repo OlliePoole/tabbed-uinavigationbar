@@ -2,7 +2,7 @@
 A UINavigationBar subclass with scrolling tabs. Similar to the Medium iOS application.
 
 ## Demo
-![](http://i.imgur.com/w29bc2r.png)
+![](http://i.imgur.com/WbnY5Yy.gif)
 
 ## Requirements
 None
