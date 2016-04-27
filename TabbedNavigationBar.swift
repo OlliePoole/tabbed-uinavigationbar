@@ -36,6 +36,8 @@ class TabbedNavigationBar: UINavigationBar {
   private var collectonView: UICollectionView?
   private var options = [String]()
   
+  private var currentSelection: Int = 0
+  
   var tabbedDelegate: TabbedNavigationBarDelegate?
   
   init(withTabs tabs: [String], navFrame: CGRect) {
@@ -60,7 +62,7 @@ class TabbedNavigationBar: UINavigationBar {
     // Add the navigation item to the bar
     setItems([navigationItem], animated: true)
     
-    collectonView?.registerClass(UICollectionViewCell.self, forCellWithReuseIdentifier: "Cell")
+    collectonView?.registerClass(TabbedCollectionViewCell.self, forCellWithReuseIdentifier: "TabbedCollectionViewCell")
   }
   
   required init?(coder aDecoder: NSCoder) {
@@ -68,7 +70,12 @@ class TabbedNavigationBar: UINavigationBar {
   }
   
   @objc private func tabbedButtonPressed(sender: UIButton) {
+    let previousSelection = currentSelection
+    currentSelection = sender.tag
     tabbedDelegate?.tabbedNavigationBar(self, didSelectOption: sender.titleForState(.Normal)!, atIndex: sender.tag)
+    
+    let indexPaths = [NSIndexPath(forItem: previousSelection, inSection: 0), NSIndexPath(forItem: currentSelection, inSection: 0)]
+    collectonView?.reloadItemsAtIndexPaths(indexPaths)
   }
 }
 
@@ -79,22 +86,47 @@ extension TabbedNavigationBar: UICollectionViewDataSource {
   }
   
   func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-    let cell = collectionView.dequeueReusableCellWithReuseIdentifier("Cell", forIndexPath: indexPath)
+    let cell = collectionView.dequeueReusableCellWithReuseIdentifier("TabbedCollectionViewCell", forIndexPath: indexPath) as! TabbedCollectionViewCell
     
-    let button = UIButton(type: .System)
+    if cell.hasBeenCreated {
+      // update contents of cell
+      cell.updateButton(isSelected: (currentSelection == indexPath.row), title: options[indexPath.row], tag: indexPath.row)
+    }
+    else {
+      // create cell
+      cell.createButton(isSelected: (currentSelection == indexPath.row), title: options[indexPath.row], tag: indexPath.row, buttonTarget: self)
+    }
     
-    button.setTitle(options[indexPath.row], forState: .Normal)
-    button.setTitleColor(.blackColor(), forState: .Normal)
-    
+    return cell
+  }
+}
+
+private class TabbedCollectionViewCell: UICollectionViewCell {
+  
+  let button = UIButton(type: .System)
+  var hasBeenCreated: Bool = false
+  
+  private func styleButton(isSelected selected: Bool, title: String, tag: Int) {
+    button.setTitle(title, forState: .Normal)
+    button.setTitleColor((selected) ? .blackColor() : .grayColor(), forState: .Normal)
+        
     button.sizeToFit()
     button.frame = CGRectMake(10, 10, button.frame.width, button.frame.height)
     
-    button.tag = indexPath.row
-    button.addTarget(self, action: .tabButtonAction, forControlEvents: .TouchUpInside)
+    button.tag = tag
+  }
+  
+  func createButton(isSelected selected: Bool, title: String, tag: Int, buttonTarget: AnyObject) {
+    hasBeenCreated = true
     
-    cell.addSubview(button)
+    styleButton(isSelected: selected, title: title, tag: tag)
+    button.addTarget(buttonTarget, action: .tabButtonAction, forControlEvents: .TouchUpInside)
     
-    return cell
+    addSubview(button)
+  }
+  
+  func updateButton(isSelected selected: Bool, title: String, tag: Int) {
+    styleButton(isSelected: selected, title: title, tag: tag)
   }
 }
 
