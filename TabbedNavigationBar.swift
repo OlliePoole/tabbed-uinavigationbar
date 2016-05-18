@@ -5,7 +5,6 @@
 //
 
 // This code is distributed under the terms and conditions of the MIT license.
-
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +45,7 @@ class TabbedNavigationBar: UINavigationBar {
     options = tabs
     
     let flowLayout = UICollectionViewFlowLayout()
-    flowLayout.itemSize = CGSizeMake(100, 40)
+    flowLayout.itemSize = CGSizeMake(90, 40) // TODO: Make this dynamic for contents
     flowLayout.scrollDirection = .Horizontal
     
     let collectionViewFrame = CGRectMake(0, 0, navFrame.width, navFrame.height)
@@ -69,12 +68,30 @@ class TabbedNavigationBar: UINavigationBar {
     fatalError("Not implemented")
   }
   
+  func setItemSelected(itemIndex: Int) {
+    let previousSelection = currentSelection
+    currentSelection = itemIndex
+    
+    var indexPaths = [NSIndexPath(forItem: currentSelection, inSection: 0)]
+    if previousSelection != currentSelection {
+      indexPaths.append(NSIndexPath(forItem: previousSelection, inSection: 0))
+    }
+    
+    collectonView?.reloadItemsAtIndexPaths(indexPaths)
+    
+    collectonView?.scrollToItemAtIndexPath(NSIndexPath(forItem: currentSelection, inSection: 0), atScrollPosition: .CenteredHorizontally, animated: true)
+  }
+  
   @objc private func tabbedButtonPressed(sender: UIButton) {
     let previousSelection = currentSelection
     currentSelection = sender.tag
     tabbedDelegate?.tabbedNavigationBar(self, didSelectOption: sender.titleForState(.Normal)!, atIndex: sender.tag)
     
-    let indexPaths = [NSIndexPath(forItem: previousSelection, inSection: 0), NSIndexPath(forItem: currentSelection, inSection: 0)]
+    var indexPaths = [NSIndexPath(forItem: currentSelection, inSection: 0)]
+    if previousSelection != currentSelection {
+      indexPaths.append(NSIndexPath(forItem: previousSelection, inSection: 0))
+    }
+    
     collectonView?.reloadItemsAtIndexPaths(indexPaths)
   }
 }
@@ -109,7 +126,9 @@ private class TabbedCollectionViewCell: UICollectionViewCell {
   private func styleButton(isSelected selected: Bool, title: String, tag: Int) {
     button.setTitle(title, forState: .Normal)
     button.setTitleColor((selected) ? .blackColor() : .grayColor(), forState: .Normal)
-        
+    
+    button.titleLabel?.font = (selected) ? ThemeManager.Fonts.Medium(14) : ThemeManager.Fonts.Book(14)
+    
     button.sizeToFit()
     button.frame = CGRectMake(10, 10, button.frame.width, button.frame.height)
     
