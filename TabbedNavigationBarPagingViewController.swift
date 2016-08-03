@@ -98,7 +98,7 @@ class TabbedNavigationBarPagingViewController: UIViewController {
     
     addChildViewController(pageViewController!)
     pageViewController?.didMoveToParentViewController(self)
-    pageViewController?.view.frame = CGRectMake(0, 62, view.frame.width, view.frame.height)
+    pageViewController?.view.frame = view.frame
     
     pageViewController?.pageDelegate = self
     
